@@ -10,8 +10,8 @@ source .venv/bin/activate
 ## Run
 ```bash
 uvicorn app.main:app --reload
-python scripts/generate_traffic.py
-python scripts/analyze_logs.py
+python3 scripts/generate_traffic.py
+python3 scripts/analyze_logs.py
 ```
 
 ## Should run with multiple workers now, try:

@@ -30,9 +30,9 @@ def main():
 
         time.sleep(random.uniform(0.01, 0.03))
 
-    # 2) Pay some invoices (some full, some partial)
+    # 2) Pay half of the invoices (some full, some partial)
     random.shuffle(invoice_ids)
-    to_pay = invoice_ids[:35]
+    to_pay = invoice_ids[:len(invoice_ids)//2]
 
     for inv_id in to_pay:
         # Fetch ledger so we know remaining balance
@@ -52,20 +52,21 @@ def main():
         method = random.choice(["ach", "card", "check"])
 
         try:
-            idempotency_key =  f"{inv_id}-{method}-{pay_amount}" if random.random() < 0.5 else ""
+            idempotency_key =  f"{inv_id}-{method}-{pay_amount}" 
             post_json("/payments", {
                 "invoice_id": inv_id,
                 "amount_cents": int(pay_amount),
                 "method": method,
                 "idempotency_key": idempotency_key,
             })
-            #50% chance to resend payment
-            post_json("/payments", {
-                "invoice_id": inv_id,
-                "amount_cents": int(pay_amount),
-                "method": method,
-                "idempotency_key": idempotency_key,
-            })
+            # 10% chance to resend payment
+            if random.random() < 0.1:
+                post_json("/payments", {
+                    "invoice_id": inv_id,
+                    "amount_cents": int(pay_amount),
+                    "method": method,
+                    "idempotency_key": idempotency_key,
+                })
         except Exception:
             pass
 
@@ -97,6 +98,18 @@ def main():
             pass
         time.sleep(random.uniform(0.01, 0.03))
 
-
+    # 4) Generate some refunds
+    # 4a) valid refunds
+    for inv_id in invoice_ids[random.randint(0, len(invoice_ids)//2) : len(invoice_ids)//2]:
+        post_json("/refunds", {
+            "invoice_id": inv_id,
+            "amount_cents": 1
+        })
+    # 4b) invalid refunds
+    for inv_id in invoice_ids[random.randint(0, len(invoice_ids)//2) : len(invoice_ids)//2]:
+        post_json("/refunds", {
+            "invoice_id": inv_id,
+            "amount_cents": 999999
+        })
 if __name__ == "__main__":
     main()

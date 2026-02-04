@@ -184,6 +184,10 @@ async def create_payment(payload: Dict[str, Any]):
         })
         raise HTTPException(status_code=400, detail="payment exceeds remaining balance")
 
+    inv["paid_cents"] += amount_cents
+    if inv["paid_cents"] == inv["amount_cents"]:
+        inv["status"] = "paid"
+
     payment_id = f"pay_{uuid4().hex[:10]}"
     payment = {
         "payment_id": payment_id,
@@ -196,10 +200,6 @@ async def create_payment(payload: Dict[str, Any]):
 
     if payload.get("idempotency_key"):
         IDEMPOTENCY[str(payload["idempotency_key"]).strip()] = payment_id
-
-    inv["paid_cents"] += amount_cents
-    if inv["paid_cents"] >= inv["amount_cents"]:
-        inv["status"] = "paid"
 
     log_business_event({
         "event_type": "payment_received",
@@ -231,3 +231,43 @@ async def ledger(invoice_id: str):
         "payments": payments,
         "outstanding_cents": balance,
     }
+
+@app.post("/refunds")
+async def create_refund(payload: Dict[str, Any]):
+    invoice_id = str(payload.get("invoice_id", "")).strip()
+    refund_cents = payload.get("amount_cents")
+
+    if not invoice_id:
+        raise HTTPException(status_code=400, detail="invoice_id is required")
+    if not isinstance(refund_cents, int) or refund_cents <= 0:
+        raise HTTPException(status_code=400, detail="amount_cents must be a positive integer")
+
+    inv = INVOICES.get(invoice_id)
+    if not inv:
+        raise HTTPException(status_code=404, detail="invoice not found")
+
+    if refund_cents > inv["paid_cents"]:
+        log_business_event({
+            "event_type": "refund_failed",
+            "invoice_id": invoice_id,
+            "amount_cents": refund_cents,
+            "reason": "refund_exceeds_paid",
+            "paid_cents": inv["paid_cents"],
+        })
+        raise HTTPException(status_code=400, detail="refund exceeds paid amount")
+
+    refund_id = f"ref_{uuid4().hex[:10]}"
+    inv["paid_cents"] -= refund_cents
+    if inv["paid_cents"] < inv["amount_cents"]:
+        inv["status"] = "open"
+
+    log_business_event({
+        "event_type": "refund_issued",
+        "refund_id": refund_id,
+        "invoice_id": invoice_id,
+        "amount_cents": refund_cents,
+        "currency": "USD",
+        "invoice_status": inv["status"],
+    })
+
+    return {"refund_id": refund_id, "status": "issued", "invoice_status": inv["status"]}
