@@ -1,0 +1,5 @@
+total_billed_cents:	872500
+total_collected_cents:	390000
+outstanding_cents:	482500
+open_invoices:	92
+paid_invoices:	8

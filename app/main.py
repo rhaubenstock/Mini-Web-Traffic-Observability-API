@@ -1,6 +1,6 @@
 import time
 from uuid import uuid4
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any
 
 from fastapi import FastAPI, Request, Response, HTTPException
@@ -271,3 +271,20 @@ async def create_refund(payload: Dict[str, Any]):
     })
 
     return {"refund_id": refund_id, "status": "issued", "invoice_status": inv["status"]}
+
+@app.get("/reconcile")
+async def reconcile():
+    total_billed = sum(inv["amount_cents"] for inv in INVOICES.values())
+    total_collected = sum(p["amount_cents"] for p in PAYMENTS.values())
+    outstanding = total_billed - total_collected
+
+    open_invoices = sum(1 for inv in INVOICES.values() if inv["status"] == "open")
+    paid_invoices = sum(1 for inv in INVOICES.values() if inv["status"] == "paid")
+
+    return {
+        "total_billed_cents": total_billed,
+        "total_collected_cents": total_collected,
+        "outstanding_cents": outstanding,
+        "open_invoices": open_invoices,
+        "paid_invoices": paid_invoices,
+    }

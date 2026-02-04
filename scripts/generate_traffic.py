@@ -111,5 +111,13 @@ def main():
             "invoice_id": inv_id,
             "amount_cents": 999999
         })
+
+    # 5) Reconcile
+    response = requests.get(f"{BASE_URL}{"/reconcile"}",headers=HEADERS, timeout=5)
+    reconciliation_info = response.json()
+    with open ('logs/reconciliation.txt', 'w') as file:
+        for key, value in reconciliation_info.items():
+            file.write(f"{key}:\t{value}\n")
+
 if __name__ == "__main__":
     main()
