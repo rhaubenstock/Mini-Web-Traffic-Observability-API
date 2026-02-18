@@ -93,24 +93,29 @@ async def create_invoice(payload: Dict[str, Any]):
         raise HTTPException(status_code=400, detail="due_days must be a positive integer")
 
     invoice_id = f"inv_{uuid4().hex[:10]}"
+    created_at = datetime.now(timezone.utc)
+    due_at = created_at + timedelta(days=due_days)
+    created_date = created_at.isoformat()
+    due_date = due_at.isoformat()
+
     invoice = {
-        "invoice_id": invoice_id,
-        "customer_id": customer_id,
-        "amount_cents": amount_cents,
-        "due_days": due_days,
-        "created_at": utc_now_iso(),
-        "paid_cents": 0,
-        "status": "open",
+    "invoice_id": invoice_id,
+    "customer_id": customer_id,
+    "amount_cents": amount_cents,
+    "due_date": due_date,
+    "created_at": created_date,
+    "paid_cents": 0,
+    "status": "open",
     }
     INVOICES[invoice_id] = invoice
 
     log_business_event({
-        "event_type": "invoice_created",
-        "invoice_id": invoice_id,
-        "customer_id": customer_id,
-        "amount_cents": amount_cents,
-        "currency": "USD",
-        "due_days": due_days,
+    "event_type": "invoice_created",
+    "invoice_id": invoice_id,
+    "customer_id": customer_id,
+    "amount_cents": amount_cents,
+    "currency": "USD",
+    "due_date": due_date,
     })
 
     return {"invoice_id": invoice_id, "status": "created"}

@@ -1,20 +1,31 @@
 # Mini Observability API
 
-This project demonstrates basic observability by logging every request and analyzing performance metrics from logs.
+This project demonstrates a basic logging and analysis of basic financial transactions including invoices, payments, and refunds.
 
+
+## Create Environment
+```bash
+python3 -m venv .venv
+```
 
 ## Activate Environment 
 ```bash
 source .venv/bin/activate
 ```
+
 ## Run
 ```bash
 uvicorn app.main:app --reload
 python3 scripts/generate_traffic.py
-python3 scripts/analyze_logs.py
 ```
 
-## Should run with multiple workers now, try:
+## Can be run with multiple workers for higher workloads:
 ```bash
 uvicorn main:app --workers 4
 ```
+
+## Next Steps
+* Containerization
+* Data Visualization
+* Load Testing
+* API

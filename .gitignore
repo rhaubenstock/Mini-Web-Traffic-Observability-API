@@ -1,5 +1,5 @@
 # Environment files
 /.venv
 /app/__pycache__
-
+/notes
 
