@@ -8,8 +8,10 @@ from fastapi.responses import JSONResponse
 
 from app.telemetry import JsonlLogger
 
+from os import getpid
+
 app = FastAPI(title="Mini Observability API")
-logger = JsonlLogger(filepath="logs/logs.jsonl")
+logger = JsonlLogger(filepath=f"logs/logs-{getpid()}.jsonl")
 
 # --- In-memory "database" (kept intentionally simple) ---
 INVOICES: Dict[str, Dict[str, Any]] = {}   # invoice_id -> invoice record

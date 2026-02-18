@@ -1,7 +1,7 @@
 # Mini Observability API
 
 This project demonstrates a basic logging and analysis of basic financial transactions including invoices, payments, and refunds.
-
+Currently write logs to separate files for each process in order to support running with multiple workloads.
 
 ## Create Environment
 ```bash
@@ -28,4 +28,5 @@ uvicorn main:app --workers 4
 * Containerization
 * Data Visualization
 * Load Testing
-* API
+* Log Reconciliation
+* API Documentation
