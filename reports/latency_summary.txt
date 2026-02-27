@@ -1,0 +1,5 @@
+Total requests: 550
+Status counts: {200: 484, 400: 62, 404: 4}
+p50 latency: 4.49
+p95 latency: 9.1
+p99 latency: 13.05

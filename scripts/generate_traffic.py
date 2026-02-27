@@ -114,10 +114,14 @@ def main():
 
     # 5) Reconcile
     response = requests.get(f"{BASE_URL}{"/reconcile"}",headers=HEADERS, timeout=5)
+    
     reconciliation_info = response.json()
-    with open ('logs/reconciliation.txt', 'w') as file:
-        for key, value in reconciliation_info.items():
-            file.write(f"{key}:\t{value}\n")
+    reconciliation_items = reconciliation_info.items()
+
+    if len(reconciliation_items) > 0:
+        with open ('reports/reconciliation.txt', 'w') as file:
+            for key, value in reconciliation_items:
+                file.write(f"{key}:\t{value}\n")
 
 if __name__ == "__main__":
     main()
