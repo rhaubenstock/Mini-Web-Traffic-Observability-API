@@ -109,10 +109,14 @@ refund_issued: 4
 
 ## Key Design Choices (Why Each Matters)
 ###  Structured Logging
-Logs are written as JSONL (one JSON object per line) to support:
+Logs are written as JSONL (one JSON object per line), and not text or CSV, to support:
 - Easy ingestion into monitoring systems
 - Simple offline analysis
 - Compatibility with tools like ELK or Datadog
+
+**Reason:** Production systems (ELK, Datadog, Splunk) all ingest JSON natively
+
+**Benefit:** Same code works for tiny scripts *and* petabyte-scale systems
 
 ### Separate Business and Latency Reports
 - Latency metrics measure system health.
