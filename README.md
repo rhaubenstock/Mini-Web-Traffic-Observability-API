@@ -1,4 +1,6 @@
-# Observability-Driven Accounts Receivable API
+# Web Traffic Observability API
+
+**A production-inspired backend service demonstrating modern observability patterns:** structured logging, synthetic load generation, and post-hoc latency/error analysis.
 
 ## Overview
 This project simulates a production-style backend service for managing invoices and payments, with structured telemetry logging and post-hoc log analysis.
@@ -12,23 +14,54 @@ It demonstrates:
 
 The goal is to simulate how a real backend service behaves under load and how its telemetry can be analyzed.
 
+## Why This Matters
+
+Most developers only add observability *after* something breaks. This project builds it in from day one.
+It shows how to separate **system health** (latency) from **business correctness** (domain events), 
+generate realistic load programmatically, and extract insights from logs—without Prometheus or Datadog.
+
 ---
-## Architecture
-The system has three components:
-1. **API Service (FastAPI)**
-   - Endpoints for invoices, payments, refunds, ledger lookup, and reconciliation
-   - Middleware logs every HTTP request with latency and status code
-   - Business events (invoice_created, payment_received, etc.) are logged separately
-2. **Traffic Generator**
-   - Simulates realistic activity (invoice creation as well as partial, invalid, and redundant payments)
-   - Generates both successful and failed requests
-3. **Log Analyzer**
-   - Reads JSONL logs
-   - Computes request counts, error counts
-   - Calculates p50 / p95 / p99 latency
-   - Summarizes business event counts
-Logs are written as structured JSON (one event per line).
----
+
+## How It Works
+
+The system separates concerns into **three independent components** that mirror production architecture:
+
+### 1. API Service (FastAPI)
+The backend exposes REST endpoints for a financial domain (invoices, payments, refunds).
+- Every HTTP request is logged with latency and status code via **middleware**
+- Domain events (invoice_created, payment_received, payment_failed, refund_issued) are emitted separately
+- Business logic validates state consistency (e.g., can't refund more than paid)
+
+**Why:** This separation of *system observability* (HTTP metrics) from *business observability* (domain events) is critical in production. You want to know *what happened* (event count) independently from *how fast* it happened (latency).
+
+### 2. Traffic Generator (Synthetic Load)
+Rather than manually curl-ing endpoints, a script generates **realistic, varied load** including:
+- Successful invoice creation and payment flows
+- Partial payments and overpayments (edge cases)
+- Invalid operations (double-payments, missing invoices)
+- Natural error conditions
+
+**Why:** This produces meaningful telemetry that reflects how real systems break. Manual testing is slow; synthetic patterns are reproducible.
+
+### 3. Log Analyzer (Post-Hoc Analysis)
+Reads all JSONL log files and computes:
+- **System health:** Total requests, error rate, p50/p95/p99 latency percentiles
+- **Business metrics:** Counts of each domain event type
+
+**Why:** This demonstrates how logs become insights. In production, you'd ship these metrics to Prometheus or Datadog; here, we do it locally to show the principle.
+
+#### Data Flow
+
+[Traffic Generator] 
+      ↓ (makes HTTP requests)
+[API Service] 
+      ↓ (logs events)
+[JSONL files on disk]
+      ↓ (reads)
+[Log Analyzer]
+      ↓ (outputs)
+[Metrics Report]
+
 ## Quickstart
 ### 1. Create virtual environment
 ```bash
@@ -74,12 +107,16 @@ payment_failed: 9
 refund_issued: 4
 ```
 
-## Design Decisions
+## Key Design Choices (Why Each Matters)
 ###  Structured Logging
-Logs are written as JSONL (one JSON object per line) to support:
+Logs are written as JSONL (one JSON object per line), and not text or CSV, to support:
 - Easy ingestion into monitoring systems
 - Simple offline analysis
 - Compatibility with tools like ELK or Datadog
+
+**Reason:** Production systems (ELK, Datadog, Splunk) all ingest JSON natively
+
+**Benefit:** Same code works for tiny scripts *and* petabyte-scale systems
 
 ### Separate Business and Latency Reports
 - Latency metrics measure system health.
