@@ -52,7 +52,15 @@ Reads all JSONL log files and computes:
 
 #### Data Flow
 
-[API Service logs events] → [JSONL files on disk] ← [Traffic Generator makes requests] ↓ [Log Analyzer reads logs & computes metrics]
+[Traffic Generator] 
+      ↓ (makes HTTP requests)
+[API Service] 
+      ↓ (logs events)
+[JSONL files on disk]
+      ↓ (reads)
+[Log Analyzer]
+      ↓ (outputs)
+[Metrics Report]
 
 ## Quickstart
 ### 1. Create virtual environment
